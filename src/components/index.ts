@@ -1,2 +1,4 @@
 export { UserModal } from './Users'
+export { ProductModal } from './Products'
 export { ProfileSkeleton } from './Skeletons'
+export { ConfirmModal } from './ConfirmModal'

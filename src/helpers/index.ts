@@ -4,3 +4,4 @@
 
 export { generateUsernameFromName, generateRandomPassword } from './userCredentials'
 export { getApiErrorMessage } from './error'
+export { readFileAsDataUrl } from './file'

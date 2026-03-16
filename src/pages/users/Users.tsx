@@ -13,46 +13,12 @@ import {
   openEditModal,
   closeModal,
 } from '@/store/users/userSlice'
-import { FiPlus, FiRefreshCw, FiEdit2, FiTrash2, FiChevronUp, FiChevronDown } from 'react-icons/fi'
+import { FiPlus, FiRefreshCw, FiEdit2, FiTrash2 } from 'react-icons/fi'
 import { UserModal } from '@/components/Users'
+import { ConfirmModal } from '@/components'
+import { SortableHeader, type SortOrder } from '@/components/Table/SortableHeader'
 
 type SortKey = 'id' | 'nombre' | 'apellidos' | 'telefono'
-type SortOrder = 'asc' | 'desc'
-
-function SortableHeader({
-  label,
-  sortKey,
-  currentSortBy,
-  sortOrder,
-  onSort,
-}: {
-  label: string
-  sortKey: SortKey
-  currentSortBy: SortKey
-  sortOrder: SortOrder
-  onSort: (key: SortKey) => void
-}) {
-  const isActive = currentSortBy === sortKey
-  return (
-    <button
-      type="button"
-      onClick={() => onSort(sortKey)}
-      className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-left font-semibold text-gray-700 transition hover:bg-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#d23b3b]/40"
-      title={isActive ? `Orden ${sortOrder === 'asc' ? 'ascendente' : 'descendente'}. Clic para cambiar.` : 'Ordenar'}
-    >
-      {label}
-      {isActive ? (
-        sortOrder === 'asc' ? (
-          <FiChevronUp className="h-4 w-4 shrink-0 text-[#d23b3b]" aria-hidden />
-        ) : (
-          <FiChevronDown className="h-4 w-4 shrink-0 text-[#d23b3b]" aria-hidden />
-        )
-      ) : (
-        <FiChevronDown className="h-4 w-4 shrink-0 text-gray-400 opacity-60" aria-hidden />
-      )}
-    </button>
-  )
-}
 
 export function Users() {
   const dispatch = useAppDispatch()
@@ -68,6 +34,7 @@ export function Users() {
   } = useAppSelector((state) => state.users)
   const [sortBy, setSortBy] = useState<SortKey>('id')
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
+  const [userToDelete, setUserToDelete] = useState<UserWithOptionalUsername | null>(null)
 
   useEffect(() => {
     dispatch(fetchUsers())
@@ -80,18 +47,6 @@ export function Users() {
   const handleRefresh = () => {
     dispatch(fetchUsers()).unwrap().catch(() => {})
   }
-
-  const handleDeleteUser = (user: UserWithOptionalUsername) => {
-    const confirmed = window.confirm(
-      `¿Eliminar al usuario "${user.nombre} ${user.apellido_paterno}"? Esta acción no se puede deshacer.`
-    )
-    if (!confirmed) return
-    dispatch(deleteUser(user.id))
-      .unwrap()
-      .then(() => toast.success('Usuario eliminado'))
-      .catch((msg) => toast.error(msg as string))
-  }
-
 
   const handleSort = (key: SortKey) => {
     setSortBy(key)
@@ -276,7 +231,7 @@ export function Users() {
                           type="button"
                           className="inline-flex items-center justify-center rounded-full border border-red-200 bg-white p-1.5 text-xs text-red-600 shadow-sm transition hover:bg-red-50"
                           title="Eliminar usuario"
-                          onClick={() => handleDeleteUser(u as UserWithOptionalUsername)}
+                          onClick={() => setUserToDelete(u as UserWithOptionalUsername)}
                         >
                           <FiTrash2 className="h-4 w-4" />
                         </button>
@@ -288,6 +243,28 @@ export function Users() {
             </tbody>
           </table>
         </div>
+
+      <ConfirmModal
+        open={userToDelete != null}
+        title="Eliminar usuario"
+        message={
+          userToDelete
+            ? `¿Eliminar al usuario "${userToDelete.nombre} ${userToDelete.apellido_paterno}"? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmLabel="Eliminar"
+        onClose={() => setUserToDelete(null)}
+        onConfirm={async () => {
+          if (!userToDelete) return
+          try {
+            await dispatch(deleteUser(userToDelete.id)).unwrap()
+            toast.success('Usuario eliminado')
+          } catch (err) {
+            toast.error(err as string)
+            throw err
+          }
+        }}
+      />
 
       <UserModal
         mode={modalMode}

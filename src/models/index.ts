@@ -1,3 +1,6 @@
 export * from './users'
 export * from './direccion'
 export * from './roles'
+export * from './categories'
+export * from './subcategories'
+export * from './products'

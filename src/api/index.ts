@@ -16,6 +16,9 @@ api.interceptors.request.use(
       req.headers = req.headers ?? {}
       req.headers.Authorization = `Bearer ${token}`
     }
+    if (req.data instanceof FormData) {
+      delete req.headers['Content-Type']
+    }
     return req
   },
   (err) => Promise.reject(err)
