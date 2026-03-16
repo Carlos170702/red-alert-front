@@ -4,18 +4,23 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FiEye, FiEyeOff, FiZap } from 'react-icons/fi'
 import type { UserModalProps, UserFormValues } from '@/types'
 import { userFormSchema } from '@/schemas'
+import { getRolesService } from '@/services/roles.service'
+import type { Role } from '@/models/roles'
+import { generateUsernameFromName, generateRandomPassword } from '@/helpers'
 
 const defaultValues: UserFormValues = {
   nombre: '',
   apellido_paterno: '',
   apellido_materno: '',
   telefono: '',
+  role_id: 0,
   username: '',
   password: '',
 }
 
 export function UserModal({ mode, initialUser, open, saving, onClose, onSubmit }: UserModalProps) {
   const [showPassword, setShowPassword] = useState(false)
+  const [roles, setRoles] = useState<Role[]>([])
 
   const {
     register,
@@ -24,10 +29,17 @@ export function UserModal({ mode, initialUser, open, saving, onClose, onSubmit }
     setValue,
     getValues,
     formState: { errors },
-  } = useForm<UserFormValues>({
+  } = useForm({
     resolver: zodResolver(userFormSchema),
     defaultValues,
   })
+
+  useEffect(() => {
+    if (!open) return
+    getRolesService()
+      .then(setRoles)
+      .catch(() => setRoles([]))
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -37,35 +49,25 @@ export function UserModal({ mode, initialUser, open, saving, onClose, onSubmit }
         apellido_paterno: initialUser.apellido_paterno,
         apellido_materno: initialUser.apellido_materno,
         telefono: initialUser.telefono ?? '',
+        role_id: initialUser.role_id ?? 0,
         username: initialUser.username ?? '',
         password: '',
       })
     } else {
-      reset(defaultValues)
+      reset({ ...defaultValues, role_id: 0 })
     }
-  }, [open, mode, initialUser, reset])
+  }, [open, mode, initialUser, reset, roles])
 
-  const generateUsername = () => {
+  const handleGenerateUsername = () => {
     const values = getValues()
-    const nombre = (values.nombre?.trim().split(' ')[0] || 'user') ?? 'user'
-    const ap = (values.apellido_paterno?.trim().split(' ')[0] || '') ?? ''
-    const base = nombre + ap
-    const normalized = base
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .toLowerCase()
-    const suffix = Math.floor(Math.random() * 1000)
-    setValue('username', `${normalized || 'user'}${suffix}`)
+    setValue(
+      'username',
+      generateUsernameFromName(values.nombre ?? '', values.apellido_paterno ?? '')
+    )
   }
 
-  const generatePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!$%&?'
-    let pwd = ''
-    for (let i = 0; i < 10; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    setValue('password', pwd)
+  const handleGeneratePassword = () => {
+    setValue('password', generateRandomPassword())
   }
 
   const onFormSubmit = (data: UserFormValues) => {
@@ -144,6 +146,28 @@ export function UserModal({ mode, initialUser, open, saving, onClose, onSubmit }
             </div>
           </div>
 
+          <div className="space-y-1">
+            <label className="text-xs font-semibold tracking-widest text-gray-500">
+              ROL
+            </label>
+            <select
+              {...register('role_id', { valueAsNumber: true })}
+              className={`${inputClass} ${errors.role_id ? inputErrorClass : ''}`}
+            >
+              <option value="" disabled>
+                {roles.length === 0 ? 'Cargando roles...' : 'Selecciona un rol para el usuario'}
+              </option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+            {errors.role_id && (
+              <p className="text-xs text-red-600">{errors.role_id.message}</p>
+            )}
+          </div>
+
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1.5fr)]">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -168,7 +192,7 @@ export function UserModal({ mode, initialUser, open, saving, onClose, onSubmit }
                 />
                 <button
                   type="button"
-                  onClick={generateUsername}
+                  onClick={handleGenerateUsername}
                   className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-2 text-xs text-gray-700 shadow-sm transition hover:bg-gray-50"
                   title="Generar usuario automáticamente"
                 >
@@ -221,7 +245,7 @@ export function UserModal({ mode, initialUser, open, saving, onClose, onSubmit }
                 </button>
                 <button
                   type="button"
-                  onClick={generatePassword}
+                  onClick={handleGeneratePassword}
                   className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-2 text-xs text-gray-700 shadow-sm transition hover:bg-gray-50"
                   title="Generar contraseña automáticamente"
                 >

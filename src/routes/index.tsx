@@ -15,6 +15,7 @@ import { useEffect } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicRoute } from './PublicRoute'
+import { AdminRoute } from './AdminRoute'
 
 export function AppRoutes() {
   const dispatch = useAppDispatch()
@@ -33,7 +34,9 @@ export function AppRoutes() {
         <Route element={<Layout />}>
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.INVENTORY} element={<Inventory />} />
-          <Route path={ROUTES.USERS} element={<Users />} />
+          <Route element={<AdminRoute />}>
+            <Route path={ROUTES.USERS} element={<Users />} />
+          </Route>
           <Route path={ROUTES.CATALOGS} element={<Catalogs />} />
           <Route path={ROUTES.PROFILE} element={<Profile />} />
         </Route>

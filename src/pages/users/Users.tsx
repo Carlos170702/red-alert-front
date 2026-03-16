@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import type { UserWithOptionalUsername } from '@/types'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -13,8 +13,46 @@ import {
   openEditModal,
   closeModal,
 } from '@/store/users/userSlice'
-import { FiPlus, FiRefreshCw, FiEdit2, FiTrash2 } from 'react-icons/fi'
+import { FiPlus, FiRefreshCw, FiEdit2, FiTrash2, FiChevronUp, FiChevronDown } from 'react-icons/fi'
 import { UserModal } from '@/components/Users'
+
+type SortKey = 'id' | 'nombre' | 'apellidos' | 'telefono'
+type SortOrder = 'asc' | 'desc'
+
+function SortableHeader({
+  label,
+  sortKey,
+  currentSortBy,
+  sortOrder,
+  onSort,
+}: {
+  label: string
+  sortKey: SortKey
+  currentSortBy: SortKey
+  sortOrder: SortOrder
+  onSort: (key: SortKey) => void
+}) {
+  const isActive = currentSortBy === sortKey
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-left font-semibold text-gray-700 transition hover:bg-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#d23b3b]/40"
+      title={isActive ? `Orden ${sortOrder === 'asc' ? 'ascendente' : 'descendente'}. Clic para cambiar.` : 'Ordenar'}
+    >
+      {label}
+      {isActive ? (
+        sortOrder === 'asc' ? (
+          <FiChevronUp className="h-4 w-4 shrink-0 text-[#d23b3b]" aria-hidden />
+        ) : (
+          <FiChevronDown className="h-4 w-4 shrink-0 text-[#d23b3b]" aria-hidden />
+        )
+      ) : (
+        <FiChevronDown className="h-4 w-4 shrink-0 text-gray-400 opacity-60" aria-hidden />
+      )}
+    </button>
+  )
+}
 
 export function Users() {
   const dispatch = useAppDispatch()
@@ -28,6 +66,8 @@ export function Users() {
     selectedUser,
     error,
   } = useAppSelector((state) => state.users)
+  const [sortBy, setSortBy] = useState<SortKey>('id')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
   useEffect(() => {
     dispatch(fetchUsers())
@@ -52,15 +92,50 @@ export function Users() {
       .catch((msg) => toast.error(msg as string))
   }
 
+
+  const handleSort = (key: SortKey) => {
+    setSortBy(key)
+    setSortOrder((prev) => (prev === 'asc' && sortBy === key ? 'desc' : 'asc'))
+  }
+
   const filteredUsers = useMemo(() => {
-    if (!filter.trim()) return users
-    const q = filter.toLowerCase()
-    return users.filter((u) => {
-      const fullName = `${u.nombre} ${u.apellido_paterno} ${u.apellido_materno}`.toLowerCase()
-      const username = (u as UserWithOptionalUsername).username?.toLowerCase() ?? ''
-      return fullName.includes(q) || username.includes(q)
+    let list = users
+    if (filter.trim()) {
+      const q = filter.toLowerCase()
+      list = list.filter((u) => {
+        const fullName = `${u.nombre} ${u.apellido_paterno} ${u.apellido_materno}`.toLowerCase()
+        const username = (u as UserWithOptionalUsername).username?.toLowerCase() ?? ''
+        return fullName.includes(q) || username.includes(q)
+      })
+    }
+    const sorted = [...list].sort((a, b) => {
+      let aVal: string | number
+      let bVal: string | number
+      switch (sortBy) {
+        case 'id':
+          aVal = a.id
+          bVal = b.id
+          return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number)
+        case 'nombre':
+          aVal = a.nombre.toLowerCase()
+          bVal = b.nombre.toLowerCase()
+          break
+        case 'apellidos':
+          aVal = `${a.apellido_paterno} ${a.apellido_materno}`.toLowerCase()
+          bVal = `${b.apellido_paterno} ${b.apellido_materno}`.toLowerCase()
+          break
+        case 'telefono':
+          aVal = (a.telefono ?? '').toLowerCase()
+          bVal = (b.telefono ?? '').toLowerCase()
+          break
+        default:
+          return 0
+      }
+      const cmp = (aVal as string).localeCompare(bVal as string)
+      return sortOrder === 'asc' ? cmp : -cmp
     })
-  }, [filter, users])
+    return sorted
+  }, [filter, users, sortBy, sortOrder])
 
   const handleModalSubmit = (args: {
     form: Parameters<typeof submitUser>[0]['form']
@@ -126,10 +201,42 @@ export function Users() {
         <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">ID</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Nombre</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Apellidos</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Teléfono</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">
+                  <SortableHeader
+                    label="ID"
+                    sortKey="id"
+                    currentSortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">
+                  <SortableHeader
+                    label="Nombre"
+                    sortKey="nombre"
+                    currentSortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">
+                  <SortableHeader
+                    label="Apellidos"
+                    sortKey="apellidos"
+                    currentSortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">
+                  <SortableHeader
+                    label="Teléfono"
+                    sortKey="telefono"
+                    currentSortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                </th>
                 <th className="px-4 py-2 text-left font-semibold text-gray-700">Acciones</th>
               </tr>
             </thead>

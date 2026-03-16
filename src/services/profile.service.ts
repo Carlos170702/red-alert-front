@@ -2,6 +2,7 @@ import { api } from '@/api'
 import type { UpdateProfilePayload, UpdateProfileResponse } from '@/types'
 import { usersAdapter } from '@/adapters/users'
 import type { UserResponse } from '@/models/users'
+import { getApiErrorMessage } from '@/helpers'
 
 export async function updateProfileCompleteService(
   userId: number,
@@ -22,18 +23,22 @@ export async function updateProfileCompleteService(
   if (payload.codigo_postal != null && payload.codigo_postal !== '')
     body.codigo_postal = payload.codigo_postal
 
-  const res = await api.put<{
-    user: UserResponse
-    auth?: { id: number; username: string }
-    direccion?: { id: number; calle: string; colonia: string; codigo_postal: string }
-  }>(`/users/${userId}/complete`, body)
+  try {
+    const res = await api.put<{
+      user: UserResponse
+      auth?: { id: number; username: string }
+      direccion?: { id: number; calle: string; colonia: string; codigo_postal: string }
+    }>(`/users/${userId}/complete`, body)
 
-  const user = usersAdapter.toUser(res.data.user)
-  const auth = res.data.auth
-  const direccion = res.data.direccion
-  return {
-    user,
-    ...(auth && { auth }),
-    ...(direccion && { direccion }),
+    const user = usersAdapter.toUser(res.data.user)
+    const auth = res.data.auth
+    const direccion = res.data.direccion
+    return {
+      user,
+      ...(auth && { auth }),
+      ...(direccion && { direccion }),
+    }
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'No se pudo actualizar el perfil'))
   }
 }

@@ -5,6 +5,7 @@ export type { User } from '@/models/users'
 export type AuthCredentials = {
   id: number
   username: string
+  role_id: number
 }
 
 export type AuthState = {

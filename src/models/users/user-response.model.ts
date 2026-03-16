@@ -9,6 +9,8 @@ export interface UserResponse {
   created_at?: string
   updated_at?: string
   direccion?: Direccion | null
+  username?: string | null
+  role_id?: number | null
 }
 
 export type UserListResponse = UserResponse[]

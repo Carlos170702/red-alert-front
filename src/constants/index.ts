@@ -7,3 +7,6 @@ export const ROUTES = {
   PROFILE: '/mi-perfil',
   NOT_FOUND: '*',
 } as const
+
+/** Role id for admin; only admin can see Users in sidebar */
+export const ADMIN_ROLE_ID = 1

@@ -12,8 +12,9 @@ export const fetchUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       return await getUsersService()
-    } catch {
-      return rejectWithValue('No se pudieron cargar los usuarios')
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'No se pudieron cargar los usuarios'
+      return rejectWithValue(msg)
     }
   }
 )
@@ -25,9 +26,7 @@ export const deleteUser = createAsyncThunk(
       await deleteUserService(userId)
       return userId
     } catch (error) {
-      const msg =
-        (error as { response?: { data?: { error?: string } } }).response?.data?.error ??
-        'No se pudo eliminar el usuario'
+      const msg = error instanceof Error ? error.message : 'No se pudo eliminar el usuario'
       return rejectWithValue(msg)
     }
   }
@@ -55,6 +54,7 @@ export const submitUser = createAsyncThunk(
           telefono: form.telefono || undefined,
           username: form.username,
           password: form.password,
+          role_id: form.role_id,
         })
       }
       if (mode === 'edit' && userId) {
@@ -67,14 +67,13 @@ export const submitUser = createAsyncThunk(
         await updateCredentialsService(userId, {
           username: form.username || undefined,
           password: form.password || undefined,
+          role_id: form.role_id,
         })
         return user
       }
       return rejectWithValue('Datos inválidos')
     } catch (error) {
-      const msg =
-        (error as { response?: { data?: { error?: string } } }).response?.data?.error ??
-        'No se pudo guardar el usuario'
+      const msg = error instanceof Error ? error.message : 'No se pudo guardar el usuario'
       return rejectWithValue(msg)
     }
   }

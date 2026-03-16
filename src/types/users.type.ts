@@ -20,10 +20,12 @@ export type UpdateUserPayload = {
 export type CreateUserWithCredentialsPayload = CreateUserPayload & {
   username: string
   password: string
+  role_id?: number
 }
 
 export type UserWithOptionalUsername = User & {
   username?: string | null
+  role_id?: number | null
 }
 
 export type UserModalMode = 'create' | 'edit'

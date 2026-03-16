@@ -1,5 +1,6 @@
 import { api } from '@/api'
 import { usersAdapter } from '@/adapters/users'
+import { getApiErrorMessage } from '@/helpers'
 
 const TOKEN_KEY = 'ra_token'
 
@@ -24,22 +25,27 @@ export async function validateTokenService() {
     throw new Error('No token')
   }
 
-  const response = await api.get('/auth/validate')
-  const data = response.data ?? {}
-  const rawUser = data.user
-  const auth = data.auth ?? null
+  try {
+    const response = await api.get('/auth/validate')
+    const data = response.data ?? {}
+    const rawUser = data.user
+    const auth = data.auth ?? null
 
-  if (!rawUser?.id) {
-    throw new Error('La validación no devolvió el usuario')
+    if (!rawUser?.id) {
+      throw new Error('La validación no devolvió el usuario')
+    }
+
+    const user = usersAdapter.toUser(rawUser)
+    return { token, user, auth }
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Token inválido o sesión expirada'))
   }
-
-  const user = usersAdapter.toUser(rawUser)
-  return { token, user, auth }
 }
 
 type UpdateCredentialsPayload = {
   username?: string
   password?: string
+  role_id?: number
 }
 
 export async function updateCredentialsService(
@@ -53,6 +59,13 @@ export async function updateCredentialsService(
   if (payload.password != null && payload.password !== '') {
     body.password = payload.password
   }
+  if (payload.role_id != null) {
+    body.role_id = payload.role_id
+  }
   if (Object.keys(body).length === 0) return
-  await api.put(`/auth/user/${userId}`, body)
+  try {
+    await api.put(`/auth/user/${userId}`, body)
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'No se pudieron actualizar las credenciales'))
+  }
 }

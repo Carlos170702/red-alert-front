@@ -1,12 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { User } from '@/models/users'
 import type { UserWithOptionalUsername } from '@/types'
 import { fetchUsers, deleteUser, submitUser } from './user.thunks'
 
 export type UserModalMode = 'create' | 'edit'
 
 type UsersState = {
-  list: User[]
+  list: UserWithOptionalUsername[]
   loading: boolean
   filter: string
   showModal: boolean

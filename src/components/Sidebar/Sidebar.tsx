@@ -1,12 +1,13 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { FiPackage, FiUsers, FiBook, FiLogOut } from 'react-icons/fi'
 import { ROUTES } from '@/constants'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { clearCredentials } from '@/store/auth/authSlice'
+import { selectIsAdmin } from '@/store/auth/selectors'
 
-const navItems = [
+const allNavItems = [
   { to: ROUTES.INVENTORY, label: 'Inventario', icon: FiPackage },
-  { to: ROUTES.USERS, label: 'Usuarios', icon: FiUsers },
+  { to: ROUTES.USERS, label: 'Usuarios', icon: FiUsers, adminOnly: true },
   { to: ROUTES.CATALOGS, label: 'Catálogos', icon: FiBook },
 ] as const
 
@@ -17,6 +18,10 @@ type SidebarProps = {
 export function Sidebar({ isOpen }: SidebarProps) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const isAdmin = useAppSelector(selectIsAdmin)
+  const navItems = allNavItems.filter(
+    (item) => !('adminOnly' in item && item.adminOnly) || isAdmin
+  )
 
   const handleLogout = () => {
     dispatch(clearCredentials())
