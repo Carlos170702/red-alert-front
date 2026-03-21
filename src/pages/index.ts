@@ -1,7 +1,7 @@
 export { Home } from './home'
 export { Inventory } from './inventory'
 export { Users } from './users'
-export { Catalogs } from './catalogs'
+export { Catalogs, Categories, Subcategories } from './catalogs'
 export { Profile } from './profile'
 export { default as Login } from './auth/Login'
 export { NotFound } from './not-found'

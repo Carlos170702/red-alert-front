@@ -174,9 +174,11 @@ export function Inventory() {
 
   return (
     <div className="flex h-full flex-col p-6">
-      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div className="mb-4 flex flex-col gap-3 border-b-2 border-[#d23b3b]/20 pb-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="font-display text-3xl tracking-wide text-gray-900">Inventario</h1>
+          <h1 className="font-display text-3xl tracking-wide text-gray-900">
+            <span className="text-[#d23b3b]">Inventario</span>
+          </h1>
           <p className="mt-1 text-sm text-gray-600">
             Consulta y filtra los productos por nombre, categoría y rango de precios.
           </p>
@@ -314,9 +316,9 @@ export function Inventory() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="flex-1 overflow-auto rounded-xl border border-[#d23b3b]/15 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
+          <thead className="border-b-2 border-[#d23b3b]/25 bg-red-50/30">
             <tr>
               <th className="px-4 py-2 text-left font-semibold text-gray-700">ID</th>
               <th className="px-4 py-2 text-left font-semibold text-gray-700">

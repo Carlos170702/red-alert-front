@@ -1,13 +1,5 @@
 import { ROUTES } from '@/constants'
-import {
-  Home,
-  Login,
-  NotFound,
-  Inventory,
-  Users,
-  Catalogs,
-  Profile,
-} from '@/pages'
+import { Home, Login, NotFound, Inventory, Users, Catalogs, Profile, Categories, Subcategories } from '@/pages'
 import { validateToken } from '@/store/auth/thunks'
 import { useAppDispatch } from '@/store/hooks'
 import { Layout } from '@/layouts'
@@ -38,6 +30,8 @@ export function AppRoutes() {
             <Route path={ROUTES.USERS} element={<Users />} />
           </Route>
           <Route path={ROUTES.CATALOGS} element={<Catalogs />} />
+          <Route path={ROUTES.CATEGORIES} element={<Categories />} />
+          <Route path={ROUTES.SUBCATEGORIES} element={<Subcategories />} />
           <Route path={ROUTES.PROFILE} element={<Profile />} />
         </Route>
       </Route>
